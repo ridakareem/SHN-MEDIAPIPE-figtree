@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Kerala Kitchen · Recipe Book</title>
+<link rel="icon" href="data:," />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #fbf3df;
+    --ink: #3a2616;
+    --accent: #b5532a;
+    --muted: #8a7358;
+    --leather: #5e2c14;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--ink);
+    font-family: Inter, system-ui, sans-serif;
+    background: radial-gradient(ellipse at top, #4a3123 0%, #231710 70%);
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  #layout { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; justify-content: center; }
+
+  /* ---------- Book ---------- */
+  #bookShell { filter: drop-shadow(0 30px 40px rgba(0,0,0,.55)); }
+  .page {
+    background:
+      linear-gradient(90deg, rgba(120,80,40,.10), transparent 8%, transparent 92%, rgba(120,80,40,.10)),
+      var(--paper);
+    padding: 34px 32px; overflow: hidden; position: relative;
+    display: flex; flex-direction: column;
+  }
+  .page::before { /* faint paper grain */
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .35;
+    background-image: radial-gradient(rgba(120,90,50,.12) 1px, transparent 1px);
+    background-size: 6px 6px;
+  }
+  .page .foot {
+    margin-top: auto; display: flex; justify-content: space-between;
+    font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
+  }
+
+  .cover {
+    background: linear-gradient(135deg, #7a3a1c, var(--leather));
+    color: #f6dfb0; align-items: center; justify-content: center; text-align: center;
+  }
+  .cover .frame {
+    border: 2px solid rgba(246,223,176,.55); outline: 1px solid rgba(246,223,176,.25);
+    outline-offset: 6px; border-radius: 4px; width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px;
+  }
+  .cover .big { font-size: 64px; }
+  .cover h1 { font: 800 38px/1.1 "Playfair Display", serif; margin: 0; }
+  .cover p { margin: 0; font-size: 13px; letter-spacing: .12em; text-transform: uppercase; opacity: .8; }
+
+  h2.title { font: 800 30px/1.1 "Playfair Display", serif; margin: 6px 0 12px; color: var(--accent); }
+  .emoji { font-size: 54px; line-height: 1; }
+  .chips { display: flex; gap: 8px; margin-bottom: 16px; }
+  .chip { background: #f0dcb4; border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 600; }
+  h3.sub { font: 600 14px Inter; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+  ul.ing { list-style: none; padding: 0; margin: 0; columns: 1; }
+  ul.ing li { padding: 7px 0 7px 26px; border-bottom: 1px dashed #dcc79b; position: relative; font-size: 15px; }
+  ul.ing li::before {
+    content: ""; position: absolute; left: 2px; top: 11px; width: 13px; height: 13px;
+    border: 2px solid var(--accent); border-radius: 4px;
+  }
+
+  .stephead { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .stepnum {
+    width: 74px; height: 74px; border-radius: 50%; background: var(--accent); color: #fff;
+    font: 800 38px "Playfair Display", serif; display: grid; place-items: center;
+    margin: 22px 0 18px; box-shadow: 0 6px 14px rgba(181,83,42,.35);
+  }
+  .steptitle { font: 800 25px/1.15 "Playfair Display", serif; margin: 0 0 12px; }
+  .steptext { font-size: 17px; line-height: 1.6; margin: 0; }
+  .dots { display: flex; gap: 6px; margin: 22px 0 0; }
+  .dots i { width: 9px; height: 9px; border-radius: 50%; background: #e2cfa4; }
+  .dots i.on { background: var(--accent); }
+
+  .notes .lines { flex: 1; margin-top: 8px;
+    background: repeating-linear-gradient(transparent, transparent 31px, #dcc79b 32px); }
+
+  /* ---------- Side panel ---------- */
+  #panel {
+    width: 270px; background: rgba(255,248,230,.07); border: 1px solid rgba(255,240,210,.18);
+    border-radius: 18px; padding: 16px; color: #f3e6c8; backdrop-filter: blur(6px);
+  }
+  #panel h4 { margin: 0 0 10px; font: 600 12px Inter; letter-spacing: .12em; text-transform: uppercase; opacity: .7; }
+  #camWrap { position: relative; border-radius: 12px; overflow: hidden; background: #000; aspect-ratio: 4/3; }
+  #cam, #overlay { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #cam { transform: scaleX(-1); object-fit: cover; }
+  #bar { height: 8px; border-radius: 99px; background: rgba(255,255,255,.12); margin: 14px 0 8px; overflow: hidden; }
+  #barFill { height: 100%; width: 0; background: linear-gradient(90deg, #f0b36a, #e0733a); transition: width .05s linear; }
+  #status { font-size: 14px; min-height: 20px; }
+  #pageNo { margin-top: 10px; font-size: 12px; opacity: .7; }
+  .tips { margin: 12px 0 0; padding-left: 18px; font-size: 12px; opacity: .75; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div id="layout">
+  <div id="bookShell"><div id="book"></div></div>
+
+  <aside id="panel">
+    <h4>Hand control</h4>
+    <div id="camWrap">
+      <video id="cam" muted playsinline></video>
+      <canvas id="overlay" width="320" height="240"></canvas>
+    </div>
+    <div id="bar"><div id="barFill"></div></div>
+    <div id="status">Loading hand tracking…</div>
+    <div id="pageNo"></div>
+    <ul class="tips">
+      <li>Swipe your hand <b>left</b> for the next page</li>
+      <li>Swipe <b>right</b> to go back</li>
+      <li>Keep your palm facing the camera</li>
+      <li>Arrow keys and mouse also work</li>
+    </ul>
+  </aside>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+<script type="module">
+  import { FilesetResolver, HandLandmarker } from
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+  /* ================= RECIPES (edit me) ================= */
+  const recipes = [
+    {
+      title: "Masala Dosa", emoji: "🥞", time: "40 min + fermenting", serves: "4",
+      ingredients: ["2 cups dosa batter (fermented)", "3 potatoes, boiled", "1 onion, sliced",
+                    "1 tsp mustard seeds", "Curry leaves", "½ tsp turmeric", "Oil or ghee", "Salt to taste"],
+      steps: [
+        { t: "Prepare the batter", d: "Stir the fermented batter gently and add a little water until it flows like thin cream. Add salt." },
+        { t: "Make the masala", d: "Splutter mustard seeds and curry leaves in oil. Add onion and turmeric, then cook until soft and golden." },
+        { t: "Add the potato", d: "Crumble in the boiled potatoes, season with salt and mix well. Keep the filling warm." },
+        { t: "Heat the tawa", d: "Heat a flat pan on medium-high. Sprinkle a few drops of water; they should sizzle and vanish." },
+        { t: "Spread the dosa", d: "Pour a ladle of batter in the centre and spiral outwards into a thin circle. Drizzle ghee around the edge." },
+        { t: "Fill and fold", d: "When crisp and golden, spoon the masala in the middle, fold over and serve with chutney and sambar." },
+      ],
+    },
+    {
+      title: "Sambar", emoji: "🍲", time: "35 min", serves: "4",
+      ingredients: ["½ cup toor dal", "Mixed vegetables, chopped", "Lemon-sized tamarind ball",
+                    "2 tbsp sambar powder", "1 tsp mustard seeds", "2 dried red chillies", "Curry leaves", "Salt to taste"],
+      steps: [
+        { t: "Cook the dal", d: "Pressure cook the dal with turmeric and water until completely soft, then mash it." },
+        { t: "Soak the tamarind", d: "Soak tamarind in warm water for 10 minutes, then squeeze out the juice and discard the pulp." },
+        { t: "Simmer vegetables", d: "Boil the vegetables in the tamarind water with salt and sambar powder until tender." },
+        { t: "Combine", d: "Add the mashed dal and simmer for 8 to 10 minutes, adjusting thickness with water." },
+        { t: "Temper", d: "Splutter mustard seeds, chillies and curry leaves in hot oil, then pour over the sambar." },
+      ],
+    },
+  ];
+
+  /* ================= BUILD PAGES ================= */
+  const pages = [];
+  const el = (html, cls = "", dense = false) => {
+    const d = document.createElement("div");
+    d.className = "page " + cls;
+    if (dense) d.dataset.density = "hard";
+    d.innerHTML = html;
+    pages.push(d);
+  };
+
+  el(`<div class="frame"><div class="big">🍛</div><h1>Kerala Kitchen</h1><p>Recipes · one swipe at a time</p></div>`, "cover", true);
+
+  for (const r of recipes) {
+    el(`
+      <div class="emoji">${r.emoji}</div>
+      <h2 class="title">${r.title}</h2>
+      <div class="chips"><span class="chip">⏱ ${r.time}</span><span class="chip">🍽 Serves ${r.serves}</span></div>
+      <h3 class="sub">Ingredients</h3>
+      <ul class="ing">${r.ingredients.map(i => `<li>${i}</li>`).join("")}</ul>
+      <div class="foot"><span>${r.title}</span><span>Ingredients</span></div>`);
+
+    r.steps.forEach((s, i) => {
+      el(`
+        <div class="stephead">${r.title} · Step ${i + 1} of ${r.steps.length}</div>
+        <div class="stepnum">${i + 1}</div>
+        <h2 class="steptitle">${s.t}</h2>
+        <p class="steptext">${s.d}</p>
+        <div class="dots">${r.steps.map((_, k) => `<i class="${k <= i ? "on" : ""}"></i>`).join("")}</div>
+        <div class="foot"><span>${r.title}</span><span>Step ${i + 1}</span></div>`);
+    });
+  }
+
+  // keep total even so the back cover lands correctly
+  if ((pages.length + 1) % 2 !== 0) {
+    el(`<h2 class="title">My notes</h2><div class="lines"></div><div class="foot"><span>Notes</span><span></span></div>`, "notes");
+  }
+  el(`<div class="frame"><div class="big">🌿</div><h1>Happy Cooking</h1><p>The end</p></div>`, "cover", true);
+
+  const bookEl = document.getElementById("book");
+  const pageNo = document.getElementById("pageNo");
+
+  const pageFlip = new St.PageFlip(bookEl, {
+    width: 380, height: 520, size: "fixed",
+    showCover: true, flippingTime: 900, maxShadowOpacity: 0.45,
+    drawShadow: true, useMouseEvents: true, swipeDistance: 30,
+  });
+  pageFlip.loadFromHTML(pages);
+
+  const updateNo = () => { pageNo.textContent = `Page ${pageFlip.getCurrentPageIndex() + 1} of ${pageFlip.getPageCount()}`; };
+  pageFlip.on("flip", updateNo);
+  updateNo();
+
+  addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight") pageFlip.flipNext();
+    if (e.key === "ArrowLeft") pageFlip.flipPrev();
+  });
+
+  /* ================= HAND TRACKING ================= */
+  const CONFIG = {
+    smoothing: 0.45,      // 0..1, higher = more responsive, lower = smoother
+    windowMs: 350,        // time window to measure a swipe
+    distance: 0.20,       // fraction of frame width the hand must travel
+    horizontalBias: 1.6,  // |dx| must exceed |dy| * this
+    cooldownMs: 1000,     // pause after a flip, ignores the hand returning
+  };
+
+  const video = document.getElementById("cam");
+  const overlay = document.getElementById("overlay");
+  const octx = overlay.getContext("2d");
+  const statusEl = document.getElementById("status");
+  const barFill = document.getElementById("barFill");
+  const say = (t) => (statusEl.textContent = t);
+
+  try {
+    const fileset = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm"
+    );
+    const make = (delegate) => HandLandmarker.createFromOptions(fileset, {
+      baseOptions: {
+        modelAssetPath:
+          "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+        delegate,
+      },
+      runningMode: "VIDEO", numHands: 1,
+      minHandDetectionConfidence: 0.6, minTrackingConfidence: 0.6,
+    });
+    let landmarker;
+    try { landmarker = await make("GPU"); } catch { landmarker = await make("CPU"); }
+
+    video.srcObject = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+    await video.play();
+    say("Show your hand to the camera ✋");
+
+    let sx = null, sy = null;          // smoothed position (mirrored x, 0..1)
+    let hist = [];
+    let lastFlip = 0, lastVideoTime = -1;
+
+    const drawDot = (x, y, active) => {
+      octx.clearRect(0, 0, overlay.width, overlay.height);
+      octx.beginPath();
+      octx.arc(x * overlay.width, y * overlay.height, active ? 14 : 10, 0, Math.PI * 2);
+      octx.fillStyle = active ? "rgba(240,160,80,.9)" : "rgba(255,255,255,.85)";
+      octx.fill();
+    };
+
+    function loop() {
+      requestAnimationFrame(loop);
+      if (video.currentTime === lastVideoTime) return;   // skip duplicate frames
+      lastVideoTime = video.currentTime;
+
+      const now = performance.now();
+      const hand = landmarker.detectForVideo(video, now).landmarks[0];
+      const cooling = now - lastFlip < CONFIG.cooldownMs;
+
+      if (!hand) {
+        sx = sy = null; hist = [];
+        octx.clearRect(0, 0, overlay.width, overlay.height);
+        barFill.style.width = "0%";
+        if (!cooling) say("Show your hand to the camera ✋");
+        return;
+      }
+
+      // average a few palm points for a steadier centre, mirrored so right = right
+      const pts = [0, 5, 9, 13, 17].map((i) => hand[i]);
+      const rx = 1 - pts.reduce((a, p) => a + p.x, 0) / pts.length;
+      const ry = pts.reduce((a, p) => a + p.y, 0) / pts.length;
+
+      // exponential smoothing removes jitter
+      sx = sx === null ? rx : sx + CONFIG.smoothing * (rx - sx);
+      sy = sy === null ? ry : sy + CONFIG.smoothing * (ry - sy);
+      drawDot(sx, sy, cooling);
+
+      if (cooling) { hist = []; barFill.style.width = "0%"; return; }
+
+      hist.push({ x: sx, y: sy, t: now });
+      while (hist.length && now - hist[0].t > CONFIG.windowMs) hist.shift();
+
+      const dx = sx - hist[0].x;
+      const dy = sy - hist[0].y;
+      const horizontal = Math.abs(dx) > Math.abs(dy) * CONFIG.horizontalBias;
+      const progress = horizontal ? Math.min(1, Math.abs(dx) / CONFIG.distance) : 0;
+      barFill.style.width = progress * 100 + "%";
+      say("Ready, swipe left or right");
+
+      if (progress >= 1) {
+        lastFlip = now; hist = [];
+        if (dx < 0) { pageFlip.flipNext(); say("Next page ➡"); }
+        else        { pageFlip.flipPrev(); say("⬅ Previous page"); }
+      }
+    }
+    loop();
+  } catch (err) {
+    console.error(err);
+    say("Camera or tracking unavailable. Use arrow keys or mouse.");
+  }
+</script>
+</body>
+</html>
